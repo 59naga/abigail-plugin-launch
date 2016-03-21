@@ -26,8 +26,8 @@ No installation
 
 See also
 ---
-[abigailjs/abigail](https://github.com/abigailjs/abigail)
-[abigailjs/abigail-plugin](https://github.com/abigailjs/abigail-plugin)
+* [abigailjs/abigail](https://github.com/abigailjs/abigail)
+* [abigailjs/abigail-plugin](https://github.com/abigailjs/abigail-plugin)
 
 Development
 ---
