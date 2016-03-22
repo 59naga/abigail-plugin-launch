@@ -14,7 +14,7 @@ const options = {
 
 // specs
 describe('Launch', () => {
-  describe('a plugin behavior', () => {
+  describe('plugin lifecycle', () => {
     it('should start listening of `launch` in the `attach-plugins`', () => {
       const emitter = new AsyncEmitter;
       const launch = new Launch(emitter);
@@ -28,7 +28,6 @@ describe('Launch', () => {
         assert(results[0][0][0][0].exitCode === 0);
       });
     });
-
 
     it('should end listening of `launch` in the `detach-plugins`', () => {
       const emitter = new AsyncEmitter;
@@ -44,14 +43,33 @@ describe('Launch', () => {
         assert(results.length === 0);
       });
     });
+
+    it('if run the abort, it should instantly suspend dependence on parent', () => {
+      const emitter = new AsyncEmitter;
+      const launch = new Launch(emitter);
+
+      return emitter.emit('attach-plugins').then(() =>
+        emitter.emit('detach-plugins')
+      )
+      .then(() => {
+        launch.abort();
+        return emitter.emit('launch');
+      })
+      .then((results) => {
+        assert(results.length === 0);
+      });
+    });
   });
-  describe('.launch', () => {
+  describe('::launch', () => {
+    const emitter = new AsyncEmitter;
+    const launch = new Launch(emitter);
+
     it('if there is an object that has the main>raw in the 3d array, it should be run as a script', () => {
       const task = [[[
         { main: { raw: 'echo foo' } },
       ]]];
 
-      return Launch.launch(task, options)
+      return launch.launch(task, options)
       .then((scriptResults) => {
         const results = flattenDeep(scriptResults);
 
@@ -67,7 +85,7 @@ describe('Launch', () => {
         [[{ main: { raw: 'echo baz && sleep 0.05' } }]],
       ];
 
-      return Launch.launch(task, options)
+      return launch.launch(task, options)
       .then((scriptResults) => {
         const results = flattenDeep(scriptResults);
         assert(results[0].script.raw === task[0][0][0].main.raw);
@@ -90,7 +108,7 @@ describe('Launch', () => {
         [{ main: { raw: 'echo baz && sleep 0.05' } }],
       ]];
 
-      return Launch.launch(task, options)
+      return launch.launch(task, options)
       .then((scriptResults) => {
         const results = flattenDeep(scriptResults);
         assert(results[0].script.raw === task[0][0][0].main.raw);
@@ -113,7 +131,7 @@ describe('Launch', () => {
         { main: { raw: 'echo baz && sleep 0.05' } },
       ]]];
 
-      return Launch.launch(task, options)
+      return launch.launch(task, options)
       .then((scriptResults) => {
         const results = flattenDeep(scriptResults);
         assert(results[0].script.raw === task[0][0][0].main.raw);
@@ -130,7 +148,10 @@ describe('Launch', () => {
     });
   });
 
-  describe('.launchSerial', () => {
+  describe('::launchSerial', () => {
+    const emitter = new AsyncEmitter;
+    const launch = new Launch(emitter);
+
     it('if pre and post is defined in object, to be run in serial', () => {
       const serial = {
         pre: { raw: 'echo foo && sleep 0.05' },
@@ -138,7 +159,7 @@ describe('Launch', () => {
         post: { raw: 'echo baz && sleep 0.05' },
       };
 
-      return Launch.launchSerial(serial, options)
+      return launch.launchSerial(serial, options)
       .then((scriptResults) => {
         const results = flattenDeep(scriptResults);
         assert(results[0].script.raw === serial.pre.raw);
@@ -155,10 +176,13 @@ describe('Launch', () => {
     });
   });
 
-  describe('.childProcess', () => {
+  describe('::childProcess', () => {
+    const emitter = new AsyncEmitter;
+    const launch = new Launch(emitter);
+
     it('`canSpawn` is unless true, should run a `raw` in the exec', () => {
       const script = { raw: 'exit 1' };
-      return Launch.childProcess(script, options)
+      return launch.childProcess(script, options)
       .then((result) => {
         assert(result.script.raw === script.raw);
         assert(result.start);
@@ -169,7 +193,7 @@ describe('Launch', () => {
 
     it('`canSpawn` is true, should run a `parsed` in the spawn', () => {
       const script = { parsed: ['exit', '1'], canSpawn: true };
-      return Launch.childProcess(script, options)
+      return launch.childProcess(script, options)
       .then((result) => {
         assert(result.script.parsed === script.parsed);
         assert(result.start);
@@ -180,7 +204,7 @@ describe('Launch', () => {
 
     it('if abend and spawn, it should return the error and exitCode is 1', () => {
       const script = { parsed: ['unavailable-script'], canSpawn: true };
-      return Launch.childProcess(script, options)
+      return launch.childProcess(script, options)
       .then((result) => {
         assert(result.script.raw === script.raw);
         assert(result.start);

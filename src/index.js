@@ -7,14 +7,45 @@ import { exec } from 'child_process';
 // @class Launch
 export default class Launch extends Plugin {
   /**
-  * @static
+  * @method abort
+  * @returns {undefined}
+  */
+  abort() {
+    super.abort();
+    this.parent.removeListener('launch', this._launch);
+  }
+
+  /**
+  * @method pluginWillAttach
+  * @returns {undefined}
+  */
+  pluginWillAttach() {
+    /**
+    * @listens this.parent#launch
+    * @param {array} task - a the represents the execution order of the script
+    * @returns {promise} results - the script results
+    */
+    this._launch = (...args) => this.launch(...args);
+    this.parent.on('launch', this._launch);
+  }
+
+  /**
+  * @method pluginWillDetach
+  * @param {number} [exitCode=null] - process exit code
+  * @returns {undefined}
+  */
+  pluginWillDetach() {
+    this.parent.removeListener('launch', this._launch);
+  }
+
+  /**
   * @method launch
   * @param {array} launch - a the represents the execution order of the script
   * @param {object} [options={}] - pass to .launchSerial
   * @returns {promise} results - the script results
   * @see abigail/utils/parse
   */
-  static launch(paralells = [], options = {}) {
+  launch(paralells = [], options = {}) {
     return Promise.all(
       paralells.map((serials) =>
         serials.reduce(
@@ -30,13 +61,12 @@ export default class Launch extends Plugin {
   }
 
   /**
-  * @static
   * @method launchSerial
   * @param {object} serial - a object with the pre,main,post as Script instance.
   * @param {object} [options={}] - pass to .childProcess
   * @returns {promise<array>} scriptResults - object converted Script instance with a result status
   */
-  static launchSerial(serial, options = {}) {
+  launchSerial(serial, options = {}) {
     const scripts = [];
 
     const { pre, main, post } = serial;
@@ -62,12 +92,11 @@ export default class Launch extends Plugin {
   }
 
   /**
-  * @static
   * @method childProcess
   * @param {Script} script - run the script
   * @returns {object} scriptResult - script instance with start(time), end(time), exitCode, error
   */
-  static childProcess(script, options = {}) {
+  childProcess(script, options = {}) {
     const opts = Object.assign({ cwd: process.cwd(), stdio: 'inherit' }, options);
     const start = Date.now();
     return new Promise((resolve) => {
@@ -95,28 +124,5 @@ export default class Launch extends Plugin {
         resolve({ script, start, end, exitCode });
       });
     });
-  }
-
-  /**
-  * @method pluginWillAttach
-  * @returns {undefined}
-  */
-  pluginWillAttach() {
-    /**
-    * @listens this.parent#launch
-    * @param {array} task - a the represents the execution order of the script
-    * @returns {promise} results - the script results
-    */
-    this._launch = (...args) => this.constructor.launch(...args);
-    this.parent.on('launch', this._launch);
-  }
-
-  /**
-  * @method pluginWillDetach
-  * @param {number} [exitCode=null] - process exit code
-  * @returns {undefined}
-  */
-  pluginWillDetach() {
-    this.parent.removeListener('launch', this._launch);
   }
 }
