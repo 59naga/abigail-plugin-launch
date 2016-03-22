@@ -40,23 +40,30 @@ export default class Launch extends Plugin {
 
   /**
   * @method launch
-  * @param {array} launch - a the represents the execution order of the script
+  * @param {array} task - a the represents the execution order of the script
   * @param {object} [options={}] - pass to .launchSerial
   * @returns {promise} results - the script results
   * @see abigail/utils/parse
   */
-  launch(paralells = [], options = {}) {
-    return Promise.all(
-      paralells.map((serials) =>
-        serials.reduce(
-          (promise, paralell) =>
-            promise.then((paralellResults) =>
-              Promise.all(paralell.map((serial) => this.launchSerial(serial, options)))
-              .then((results) => paralellResults.concat(results))
-            ),
-          Promise.resolve([]),
+  launch(task = [], options = {}) {
+    return this.parent.emit('task-start', task)
+    .then(() =>
+      Promise.all(
+        task.map((serials) =>
+          serials.reduce(
+            (promise, paralell) =>
+              promise.then((paralellResults) =>
+                Promise.all(paralell.map((serial) => this.launchSerial(serial, options)))
+                .then((results) => paralellResults.concat(results))
+              ),
+            Promise.resolve([]),
+          )
         )
       )
+    )
+    .then((results) =>
+      this.parent.emit('task-end', results)
+      .then(() => results)
     );
   }
 
@@ -99,30 +106,37 @@ export default class Launch extends Plugin {
   childProcess(script, options = {}) {
     const opts = Object.assign({ cwd: process.cwd(), stdio: 'inherit' }, options);
     const start = Date.now();
-    return new Promise((resolve) => {
-      let child;
-      if (script.canSpawn) {
-        const [command, ...args] = script.parsed;
-        child = spawn(command, args, opts);
-      } else {
-        child = exec(script.raw, opts);
-        // TODO: memory leak detected
-        if (opts.stdio === 'inherit') {
-          child.stdin.pipe(process.stdin);
-          child.stdout.pipe(process.stdout);
-          child.stderr.pipe(process.stderr);
-        }
-      }
 
-      child.once('error', (error) => {
-        const end = Date.now();
-        const exitCode = 1;
-        resolve({ script, start, end, exitCode, error });
-      });
-      child.once('exit', (exitCode) => {
-        const end = Date.now();
-        resolve({ script, start, end, exitCode });
-      });
-    });
+    return this.parent.emit('script-start', { script, start })
+    .then(() =>
+      new Promise((resolve) => {
+        let child;
+        if (script.canSpawn) {
+          const [command, ...args] = script.parsed;
+          child = spawn(command, args, opts);
+        } else {
+          child = exec(script.raw, opts);
+          // TODO: memory leak detected
+          if (opts.stdio === 'inherit') {
+            child.stdin.pipe(process.stdin);
+            child.stdout.pipe(process.stdout);
+            child.stderr.pipe(process.stderr);
+          }
+        }
+
+        child.once('error', (error) => {
+          const end = Date.now();
+          const exitCode = 1;
+
+          const result = { script, start, end, exitCode, error };
+          this.parent.emit('script-error', result).then(() => resolve(result));
+        });
+        child.once('exit', (exitCode) => {
+          const end = Date.now();
+          const result = { script, start, end, exitCode };
+          this.parent.emit('script-end', result).then(() => resolve(result));
+        });
+      })
+    );
   }
 }

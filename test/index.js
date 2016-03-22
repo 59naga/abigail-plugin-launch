@@ -1,6 +1,7 @@
 // dependencies
 import AsyncEmitter from 'carrack';
 import flattenDeep from 'lodash.flattendeep';
+import sinon from 'sinon';
 import assert from 'power-assert';
 
 // target
@@ -211,6 +212,66 @@ describe('Launch', () => {
         assert(result.end);
         assert(result.exitCode === 1);
         assert(result.error.message === 'spawn unavailable-script ENOENT');
+      });
+    });
+  });
+
+  describe('for other plugins', () => {
+    const emitter = new AsyncEmitter;
+    const launch = new Launch(emitter);
+
+    it('at the time of task start, it should emit a task-start events', () => {
+      const task = [[[{ main: { raw: 'echo foo' } }]]];
+      const taskStartListener = sinon.spy();
+      emitter.on('task-start', taskStartListener);
+
+      return launch.launch(task, options).then(() => {
+        assert(taskStartListener.calledOnce);
+        assert(taskStartListener.args[0][0][0][0][0].main.raw === 'echo foo');
+      });
+    });
+
+    it('at the time of task end, it should emit a task-end events', () => {
+      const task = [[[{ main: { raw: 'echo foo' } }]]];
+      const taskEndListener = sinon.spy();
+      emitter.on('task-end', taskEndListener);
+
+      return launch.launch(task, options).then(() => {
+        assert(taskEndListener.calledOnce);
+        assert(taskEndListener.args[0][0][0][0][0].script.raw === 'echo foo');
+      });
+    });
+
+    it('at the time of script start, it should emit a script-start events', () => {
+      const task = [[[{ main: { raw: 'echo foo' } }]]];
+      const scriptStartListener = sinon.spy();
+      emitter.on('script-start', scriptStartListener);
+
+      return launch.launch(task, options).then(() => {
+        assert(scriptStartListener.calledOnce);
+        assert(scriptStartListener.args[0][0].script.raw === 'echo foo');
+      });
+    });
+
+    it('at the time of script end, it should emit a script-end events', () => {
+      const task = [[[{ main: { raw: 'echo foo' } }]]];
+      const scriptEndListener = sinon.spy();
+      emitter.on('script-end', scriptEndListener);
+
+      return launch.launch(task, options).then(() => {
+        assert(scriptEndListener.calledOnce);
+        assert(scriptEndListener.args[0][0].script.raw === 'echo foo');
+      });
+    });
+
+    it('at the time of script error, it should emit a script-error events', () => {
+      const task = [[[{ main: { parsed: ['invalid-command'], canSpawn: true } }]]];
+      const scriptErrorListener = sinon.spy();
+      emitter.on('script-error', scriptErrorListener);
+
+      return launch.launch(task, options).then(() => {
+        assert(scriptErrorListener.calledOnce);
+        assert(scriptErrorListener.args[0][0].script.parsed[0] === 'invalid-command');
       });
     });
   });
