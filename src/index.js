@@ -7,35 +7,19 @@ import { exec } from 'child_process';
 // @class Launch
 export default class Launch extends Plugin {
   /**
-  * @method abort
-  * @returns {undefined}
-  */
-  abort() {
-    super.abort();
-    this.parent.removeListener('launch', this._launch);
-  }
-
-  /**
   * @method pluginWillAttach
   * @returns {undefined}
   */
   pluginWillAttach() {
-    /**
-    * @listens this.parent#launch
-    * @param {array} task - a the represents the execution order of the script
-    * @returns {promise} results - the script results
-    */
-    this._launch = (...args) => this.launch(...args);
-    this.parent.on('launch', this._launch);
+    this.subscribe('launch', (...args) => this.launch(...args));
   }
 
   /**
   * @method pluginWillDetach
-  * @param {number} [exitCode=null] - process exit code
   * @returns {undefined}
   */
   pluginWillDetach() {
-    this.parent.removeListener('launch', this._launch);
+    this.abort();
   }
 
   /**

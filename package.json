@@ -1,7 +1,7 @@
 {
   "name": "abigail-plugin-launch",
   "description": "abigail launch plugin",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "lib",
   "files": [
     "lib"
@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "abigail": "^0.1.2",
-    "abigail-plugin": "^0.0.6",
+    "abigail-plugin": "^0.0.7",
     "babel-cli": "^6.6.5",
     "babel-eslint": "^5.0.0",
     "babel-plugin-add-module-exports": "^0.1.2",
