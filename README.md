@@ -21,13 +21,32 @@ Abigail Launch Plugin
 
 No installation
 ---
-
 > abigail built-in plugin
+
+Usage
+---
+this plugin is simulator body. when receiving the launch event of abigail, evaluates its first arguments.
+
+currently, the option are undefined. __please don't disable this plugin__, [exit](https://github.com/abigailjs/abigail-plugin-exit#usage) and [watch](https://github.com/abigailjs/abigail-plugin-watch#usage) doesn't work correctly.
+
+in your plugin, if the task is to be executed at any time, you can run the task after getting the instance using `this.getPlugin`.
+
+```js
+class YourPlugin extends Plugin {
+  pluginWillAttach() {
+    const launchPlugin = this.getPlugin('launch');
+    launchPlugin.abort();
+    launchPlugin.launch(this.parent.task);
+  }
+}
+```
+
+> see also: [abigail-plugin-watch/src/index.js:83](https://github.com/abigailjs/abigail-plugin-watch/blob/v0.0.4/src/index.js#L83)
 
 See also
 ---
-* [abigailjs/abigail](https://github.com/abigailjs/abigail)
-* [abigailjs/abigail-plugin](https://github.com/abigailjs/abigail-plugin)
+* [abigailjs/abigail](https://github.com/abigailjs/abigail#usage)
+* [abigailjs/abigail-plugin](https://github.com/abigailjs/abigail-plugin#usage)
 
 Development
 ---
