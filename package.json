@@ -32,7 +32,7 @@
     "carrack": "^0.0.5",
     "codeclimate-test-reporter": "^0.3.1",
     "eslint": "2.2.0",
-    "eslint-config-airbnb": "^6.1.0",
+    "eslint-config-airbnb": "6.1.0",
     "espower-babel": "^4.0.1",
     "lodash.flattendeep": "^4.1.0",
     "mocha": "^2.4.5",
