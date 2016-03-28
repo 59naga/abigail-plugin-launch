@@ -3,6 +3,7 @@ import Promise from 'bluebird';
 import Plugin from 'abigail-plugin';
 import spawn from 'cross-spawn';
 import { exec } from 'child_process';
+import semver from 'semver';
 
 // @class Launch
 export default class Launch extends Plugin {
@@ -98,6 +99,10 @@ export default class Launch extends Plugin {
         if (script.canSpawn) {
           const [command, ...args] = script.parsed;
           child = spawn(command, args, opts);
+        } else if (semver.gt(process.version, '5.6.0')) {
+          // child_process.spawn {shell} available at version gt 5.6
+          // fix: abigailjs/abigail#4
+          child = spawn(script.raw, { ...opts, shell: true });
         } else {
           child = exec(script.raw, opts);
           // TODO: memory leak detected

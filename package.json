@@ -18,7 +18,8 @@
   },
   "dependencies": {
     "bluebird": "^3.3.4",
-    "cross-spawn": "^2.1.5"
+    "cross-spawn": "^2.1.5",
+    "semver": "^5.1.0"
   },
   "devDependencies": {
     "abigail": "^1.0.0",
