@@ -18,11 +18,13 @@ describe('Launch', () => {
   describe('plugin lifecycle', () => {
     it('should start listening of `launch` in the `attach-plugins`', () => {
       const emitter = new AsyncEmitter;
-      const launch = new Launch(emitter);
-      const task = [[[{ main: { raw: 'echo foo' } }]]];
+      const launch = new Launch(emitter, true, options);
+      launch.setProps({
+        task: [[[{ main: { raw: 'echo foo' } }]]],
+      });
 
       return emitter.emit('attach-plugins').then(() =>
-        emitter.emit('launch', task, options)
+        emitter.emit('launch')
       )
       .then((results) => {
         assert(results.length === 1);

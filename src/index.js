@@ -12,7 +12,7 @@ export default class Launch extends Plugin {
   * @returns {undefined}
   */
   pluginWillAttach() {
-    this.subscribe('launch', (...args) => this.launch(...args));
+    this.subscribe('launch', () => this.launch(this.getProps().task, this.opts));
   }
 
   /**
