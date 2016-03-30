@@ -149,6 +149,70 @@ describe('Launch', () => {
         assert(results[2].start - results[1].start < allowableMillisecond);
       });
     });
+
+    describe('if the opts.bail is true, it should be to stop the serial execution in exit 1', () => {
+      it('simple', () => {
+        const task = [[
+          [{ main: { raw: 'echo foo && exit 1' } }],
+          [{ main: { raw: 'echo bar && sleep 0.05' } }],
+          [{ main: { raw: 'echo baz && sleep 0.05' } }],
+        ]];
+
+        return launch.launch(task, { ...options, bail: true })
+        .then((scriptResults) => {
+          const results = flattenDeep(scriptResults);
+          assert(results[0].script.raw === task[0][0][0].main.raw);
+          assert(results[0].exitCode === 1);
+          assert(results[1] === undefined);
+          assert(results[2] === undefined);
+        });
+      });
+
+      it('hooks', () => {
+        const task = [[
+          [{
+            pre: { raw: 'echo foo&& sleep 0.05' },
+            main: { raw: 'echo bar && exit 1' },
+            post: { raw: 'echo baz && sleep 0.05' },
+          }],
+        ]];
+
+        return launch.launch(task, { ...options, bail: true })
+        .then((scriptResults) => {
+          const results = flattenDeep(scriptResults);
+          assert(results[0].script.raw === task[0][0][0].pre.raw);
+          assert(results[0].exitCode === 0);
+          assert(results[1].script.raw === task[0][0][0].main.raw);
+          assert(results[1].exitCode === 1);
+          assert(results[2] === undefined);
+        });
+      });
+
+      it('mixin', () => {
+        const task = [[
+          [{
+            pre: { raw: 'echo foo && sleep 0.05' },
+            main: { raw: 'echo bar && sleep 0.05' },
+            post: { raw: 'echo baz && exit 1' },
+          }],
+          [{ main: { raw: 'echo beep && sleep 0.05' } }],
+          [{ main: { raw: 'echo boop && sleep 0.05' } }],
+        ]];
+
+        return launch.launch(task, { ...options, bail: true })
+        .then((scriptResults) => {
+          const results = flattenDeep(scriptResults);
+          assert(results[0].script.raw === task[0][0][0].pre.raw);
+          assert(results[0].exitCode === 0);
+          assert(results[1].script.raw === task[0][0][0].main.raw);
+          assert(results[1].exitCode === 0);
+          assert(results[2].script.raw === task[0][0][0].post.raw);
+          assert(results[2].exitCode === 1);
+          assert(results[3] === undefined);
+          assert(results[4] === undefined);
+        });
+      });
+    });
   });
 
   describe('::launchSerial', () => {

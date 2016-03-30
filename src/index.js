@@ -8,6 +8,29 @@ import semver from 'semver';
 // @class Launch
 export default class Launch extends Plugin {
   /**
+  * @static
+  * @property defaultOptions
+  */
+  static defaultOptions = {
+    bail: true,
+  };
+
+  /**
+  * @constructor
+  * @param {AsyncEmitter} parent - the abigail instance
+  * @param {string|number} value - a plugin command line argument value(ignore the boolean)
+  * @param {object} [options={}] - passed from package.json `abigail>plugins` field
+  */
+  constructor(...args) {
+    super(...args);
+
+    // turn off the bail option if value is 'force' (eg `$abby test --launch force`)
+    if (this.opts.value === 'force') {
+      this.opts.bail = false;
+    }
+  }
+
+  /**
   * @method pluginWillAttach
   * @returns {undefined}
   */
@@ -37,10 +60,15 @@ export default class Launch extends Plugin {
         task.map((serials) =>
           serials.reduce(
             (promise, paralell) =>
-              promise.then((paralellResults) =>
-                Promise.all(paralell.map((serial) => this.launchSerial(serial, options)))
-                .then((results) => paralellResults.concat(results))
-              ),
+              promise.then((paralellResults) => {
+                const paralellResult = (paralellResults[paralellResults.length - 1] || []);
+                const latestResult = paralellResult[paralellResult.length - 1] || {};
+                if (options.bail && latestResult.exitCode) {
+                  return Promise.resolve(paralellResults);
+                }
+                return Promise.all(paralell.map((serial) => this.launchSerial(serial, options)))
+                .then((results) => paralellResults.concat(results));
+              }),
             Promise.resolve([]),
           )
         )
@@ -74,11 +102,14 @@ export default class Launch extends Plugin {
 
     return scripts.reduce(
       (promise, script) =>
-        promise.then((scriptResults) =>
-          this.childProcess(script, options)
-          .then(scriptResult => scriptResults.concat(scriptResult)
-        )
-      ),
+        promise.then((scriptResults) => {
+          const latestResult = (scriptResults[scriptResults.length - 1] || []) || {};
+          if (options.bail && latestResult.exitCode) {
+            return Promise.resolve(scriptResults);
+          }
+          return this.childProcess(script, options)
+          .then(scriptResult => scriptResults.concat(scriptResult));
+        }),
       Promise.resolve([]),
     );
   }
