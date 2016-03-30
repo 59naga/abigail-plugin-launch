@@ -1,7 +1,7 @@
 {
   "name": "abigail-plugin-launch",
   "description": "abigail launch plugin",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "main": "lib",
   "files": [
     "lib"
