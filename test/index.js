@@ -62,7 +62,31 @@ describe('Launch', () => {
         assert(results.length === 0);
       });
     });
+
+    it('if detach, it should immediately kill child_processes', () => {
+      const emitter = new AsyncEmitter;
+      const launch = new Launch(emitter, true, options);
+      launch.setProps({
+        task: [[[{ main: { raw: 'echo foo && sleep 5' } }]]],
+      });
+
+      return emitter.emit('attach-plugins')
+      .then(() => {
+        const expectedAbort = emitter.emit('launch');
+        setTimeout(() => {
+          emitter.emit('detach-plugins');
+        }, 200);
+
+        return expectedAbort;
+      })
+      .then((scriptResults) => {
+        const results = flattenDeep(scriptResults);
+        assert(results[0].script.raw === 'echo foo && sleep 5');
+        assert(results[0].exitCode === 1);
+      });
+    });
   });
+
   describe('::launch', () => {
     const emitter = new AsyncEmitter;
     const launch = new Launch(emitter);

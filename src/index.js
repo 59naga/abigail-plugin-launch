@@ -28,6 +28,7 @@ export default class Launch extends Plugin {
     if (this.opts.value === 'force') {
       this.opts.bail = false;
     }
+    this.children = [];
   }
 
   /**
@@ -44,6 +45,7 @@ export default class Launch extends Plugin {
   */
   pluginWillDetach() {
     this.abort();
+    this.children.forEach((child) => child.kill());
   }
 
   /**
@@ -115,6 +117,20 @@ export default class Launch extends Plugin {
   }
 
   /**
+  * @method remove
+  * @param {child_process} child - a target child_process instance
+  * @returns {boolean} removed
+  */
+  remove(child) {
+    const index = this.children.indexOf(child);
+    if (index > -1) {
+      this.children.splice(index, 1);
+      return true;
+    }
+    return false;
+  }
+
+  /**
   * @method childProcess
   * @param {Script} script - run the script
   * @returns {object} scriptResult - script instance with start(time), end(time), exitCode, error
@@ -144,16 +160,22 @@ export default class Launch extends Plugin {
           }
         }
 
+        this.children.push(child);
+
         child.once('error', (error) => {
           const end = Date.now();
           const exitCode = 1;
+          this.remove(child);
 
           const result = { script, start, end, exitCode, error };
           this.parent.emit('script-error', result).then(() => resolve(result));
         });
-        child.once('exit', (exitCode) => {
+        child.once('exit', (code) => {
+          const exitCode = code === null ? 1 : code;// killed?
           const end = Date.now();
           const result = { script, start, end, exitCode };
+          this.remove(child);
+
           this.parent.emit('script-end', result).then(() => resolve(result));
         });
       })
