@@ -2,7 +2,7 @@
 import AsyncEmitter from 'carrack';
 import flattenDeep from 'lodash.flattendeep';
 import sinon from 'sinon';
-import assert from 'power-assert';
+import assert from 'assert';
 
 // target
 import Launch from '../src';
