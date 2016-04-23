@@ -281,29 +281,6 @@ describe('Launch', () => {
         assert(result.exitCode === 1);
       });
     });
-
-    it('`canSpawn` is true, should run a `parsed` in the spawn', () => {
-      const script = { parsed: ['exit', '1'], canSpawn: true };
-      return launch.childProcess(script, options)
-      .then((result) => {
-        assert(result.script.parsed === script.parsed);
-        assert(result.start);
-        assert(result.end);
-        assert(result.exitCode === 1);
-      });
-    });
-
-    it('if abend and spawn, it should return the error and exitCode is 1', () => {
-      const script = { parsed: ['unavailable-script'], canSpawn: true };
-      return launch.childProcess(script, options)
-      .then((result) => {
-        assert(result.script.raw === script.raw);
-        assert(result.start);
-        assert(result.end);
-        assert(result.exitCode === 1);
-        assert(result.error.message === 'spawn unavailable-script ENOENT');
-      });
-    });
   });
 
   describe('for other plugins', () => {
@@ -351,17 +328,6 @@ describe('Launch', () => {
       return launch.launch(task, options).then(() => {
         assert(scriptEndListener.calledOnce);
         assert(scriptEndListener.args[0][0].script.raw === 'echo foo');
-      });
-    });
-
-    it('at the time of script error, it should emit a script-error events', () => {
-      const task = [[[{ main: { parsed: ['invalid-command'], canSpawn: true } }]]];
-      const scriptErrorListener = sinon.spy();
-      emitter.on('script-error', scriptErrorListener);
-
-      return launch.launch(task, options).then(() => {
-        assert(scriptErrorListener.calledOnce);
-        assert(scriptErrorListener.args[0][0].script.parsed[0] === 'invalid-command');
       });
     });
   });

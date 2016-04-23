@@ -1,9 +1,7 @@
 // dependencies
 import Promise from 'bluebird';
 import Plugin from 'abigail-plugin';
-import spawn from 'cross-spawn';
-import { exec } from 'child_process';
-import semver from 'semver';
+import npmRunScript from 'npm-run-script';
 
 // @class Launch
 export default class Launch extends Plugin {
@@ -142,26 +140,7 @@ export default class Launch extends Plugin {
     return this.parent.emit('script-start', { script, start })
     .then(() =>
       new Promise((resolve) => {
-        let child;
-        if (script.canSpawn) {
-          const [command, ...args] = script.parsed;
-          child = spawn(command, args, opts);
-        } else if (semver.gt(process.version, '5.6.0')) {
-          // child_process.spawn {shell} available at version gt 5.6
-          // fix: abigailjs/abigail#4
-          child = spawn(script.raw, { ...opts, shell: true });
-        } else {
-          child = exec(script.raw, opts);
-          // TODO: memory leak detected
-          if (opts.stdio === 'inherit') {
-            child.stdin.pipe(process.stdin);
-            child.stdout.pipe(process.stdout);
-            child.stderr.pipe(process.stderr);
-          }
-        }
-
-        this.children.push(child);
-
+        const child = npmRunScript(script.raw, opts);
         child.once('error', (error) => {
           const end = Date.now();
           const exitCode = 1;
@@ -178,6 +157,8 @@ export default class Launch extends Plugin {
 
           this.parent.emit('script-end', result).then(() => resolve(result));
         });
+
+        this.children.push(child);
       })
     );
   }
