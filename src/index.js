@@ -133,6 +133,7 @@ export default class Launch extends Plugin {
   /**
   * @method childProcess
   * @param {Script} script - run the script
+  * @param {object} options - pass to `npm-run-script` options
   * @returns {object} scriptResult - script instance with start(time), end(time), exitCode, error
   */
   childProcess(script, options = {}) {
