@@ -43,6 +43,20 @@ class YourPlugin extends Plugin {
 
 > see also: [abigail-plugin-watch/src/index.js:83](https://github.com/abigailjs/abigail-plugin-watch/blob/v0.0.4/src/index.js#L83)
 
+## use `abigail.plugins.launch` field in `package.json`
+
+```js
+{
+  // ...
+  "abigail": {
+    "plugins": {
+      // change to strict launch
+      "launch": "bail"
+    }
+  }
+}
+```
+
 See also
 ---
 * [abigailjs/abigail](https://github.com/abigailjs/abigail#usage)
