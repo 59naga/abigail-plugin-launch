@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "bluebird": "^3.3.4",
-    "npm-run-script": "^0.0.2"
+    "npm-run-script": "^0.0.3"
   },
   "devDependencies": {
     "abigail": "^1.6.1",
