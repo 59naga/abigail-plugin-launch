@@ -9,7 +9,7 @@ export default class Launch extends Plugin {
   * @property defaultOptions
   */
   static defaultOptions = {
-    bail: true,
+    bail: false,
   };
 
   /**
@@ -24,6 +24,9 @@ export default class Launch extends Plugin {
     // turn off the bail option if value is 'force' (eg `$abby test --launch force`)
     if (this.opts.value === 'force') {
       this.opts.bail = false;
+    }
+    if (this.opts.value === 'bail') {
+      this.opts.bail = true;
     }
     this.children = [];
   }
