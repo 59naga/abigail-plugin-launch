@@ -1,5 +1,4 @@
 // dependencies
-import Promise from 'bluebird';
 import Plugin from 'abigail-plugin';
 import npmRunScript from 'npm-run-script';
 
