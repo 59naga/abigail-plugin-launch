@@ -326,6 +326,20 @@ parallel('for other plugins', () => {
     });
   });
 
+  it('at the time of script error, it should emit a script-error events', () => {
+    const emitter = new AsyncEmitter;
+    const launch = new Launch(emitter);
+    const task = [[[{ main: { raw: 'missing-bin' } }]]];
+    const scriptStartListener = sinon.spy();
+    emitter.on('script-error', scriptStartListener);
+
+    return launch.launch(task, options).then(() => {
+      assert(scriptStartListener.calledOnce);
+      assert(scriptStartListener.args[0][0] instanceof Error);
+      assert(scriptStartListener.args[0][0].message === 'spawn missing-bin ENOENT');
+    });
+  });
+
   it('at the time of script end, it should emit a script-end events', () => {
     const emitter = new AsyncEmitter;
     const launch = new Launch(emitter);

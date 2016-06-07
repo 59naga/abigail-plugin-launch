@@ -150,7 +150,7 @@ export default class Launch extends Plugin {
           this.remove(child);
 
           const result = { script, start, end, exitCode, error };
-          this.parent.emit('script-error', result).then(() => resolve(result));
+          this.parent.emit('script-error', error).then(() => resolve(result));
         });
         child.once('exit', (code) => {
           const exitCode = code === null ? 1 : code;// killed?
